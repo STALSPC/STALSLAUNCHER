@@ -6,7 +6,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
@@ -14,15 +15,15 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Grant execute permission and Build
+      - name: Grant execute permission for gradlew
         run: |
-          # 프로젝트 폴더가 어디에 있든 gradlew가 있는 위치를 찾아서 빌드 실행
-          BUILD_DIR=$(find . -name "gradlew" -exec dirname {} \;)
-          cd "$BUILD_DIR"
-          chmod +x gradlew
-          ./gradlew assembleDebug
+          find . -name "gradlew" -exec chmod +x {} +
 
-      - name: Upload APK
+      - name: Build with Gradle
+        run: |
+          find . -name "gradlew" -execdir ./gradlew assembleDebug \;
+
+      - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: my-apk
