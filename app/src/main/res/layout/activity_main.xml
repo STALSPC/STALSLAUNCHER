@@ -5,47 +5,18 @@
     android:background="@color/bg"
     android:orientation="vertical">
 
+    <!-- 상단: 시간만 표시 -->
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="44dp"
         android:paddingStart="12dp"
-        android:paddingEnd="12dp">
-
-        <ImageView
-            android:id="@+id/btnBack"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
-            android:layout_centerVertical="true"
-            android:src="@drawable/ic_back" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="30dp"
-            android:layout_centerVertical="true"
-            android:layout_marginStart="48dp"
-            android:background="@drawable/bg_pill"
-            android:gravity="center"
-            android:paddingStart="14dp"
-            android:paddingEnd="14dp"
-            android:text="현위치"
-            android:textColor="@color/text"
-            android:textSize="14sp"
-            android:textStyle="bold" />
-
-        <ImageView
-            android:id="@+id/btnHome"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
-            android:layout_alignParentEnd="true"
-            android:layout_centerVertical="true"
-            android:src="@drawable/ic_home" />
+        android:paddingEnd="16dp">
 
         <TextClock
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
             android:layout_centerVertical="true"
-            android:layout_marginEnd="16dp"
-            android:layout_toStartOf="@id/btnHome"
             android:format12Hour="a h:mm"
             android:format24Hour="a h:mm"
             android:textColor="@color/text"
@@ -60,6 +31,7 @@
         android:paddingEnd="8dp"
         android:paddingBottom="8dp">
 
+        <!-- 왼쪽 4개 버튼 -->
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="match_parent"
@@ -95,6 +67,7 @@
             </LinearLayout>
         </LinearLayout>
 
+        <!-- 가운데: 구글 검색 + 최근 검색 -->
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="match_parent"
@@ -110,84 +83,74 @@
                 android:orientation="horizontal">
 
                 <LinearLayout
-                    android:id="@+id/searchBox"
                     android:layout_width="0dp"
-                    android:layout_height="40dp"
+                    android:layout_height="44dp"
                     android:layout_weight="1"
                     android:background="@drawable/bg_search"
                     android:gravity="center_vertical"
                     android:orientation="horizontal"
-                    android:paddingStart="12dp">
+                    android:paddingStart="12dp"
+                    android:paddingEnd="8dp">
 
                     <ImageView
-                        android:layout_width="20dp"
-                        android:layout_height="20dp"
+                        android:id="@+id/searchIcon"
+                        android:layout_width="22dp"
+                        android:layout_height="22dp"
                         android:src="@drawable/ic_search"
                         android:tint="@color/accent" />
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="12dp"
-                        android:text="통합검색"
-                        android:textColor="@color/sub"
+                    <EditText
+                        android:id="@+id/searchInput"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_marginStart="10dp"
+                        android:layout_weight="1"
+                        android:background="@null"
+                        android:hint="통합검색"
+                        android:imeOptions="actionSearch"
+                        android:inputType="text"
+                        android:maxLines="1"
+                        android:singleLine="true"
+                        android:textColor="@color/text"
+                        android:textColorHint="@color/sub"
                         android:textSize="15sp" />
                 </LinearLayout>
 
                 <ImageView
-                    android:id="@+id/btnEdit"
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
+                    android:id="@+id/btnClear"
+                    android:layout_width="44dp"
+                    android:layout_height="44dp"
                     android:layout_marginStart="12dp"
                     android:background="@drawable/bg_btn"
-                    android:padding="9dp"
-                    android:src="@drawable/ic_edit" />
+                    android:padding="10dp"
+                    android:src="@drawable/ic_delete" />
             </LinearLayout>
 
-            <LinearLayout
-                android:layout_width="match_parent"
+            <TextView
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginStart="4dp"
                 android:layout_marginTop="14dp"
-                android:background="@drawable/bg_panel"
-                android:gravity="center_vertical"
-                android:orientation="horizontal"
-                android:padding="14dp">
+                android:layout_marginBottom="6dp"
+                android:text="최근 검색 (꾹 누르면 삭제)"
+                android:textColor="@color/sub"
+                android:textSize="12sp" />
+
+            <ScrollView
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:background="@drawable/bg_panel">
 
                 <LinearLayout
-                    android:layout_width="0dp"
+                    android:id="@+id/recentList"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="서울역(서울1호선)"
-                        android:textColor="@color/text"
-                        android:textSize="18sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="2dp"
-                        android:text="중구 한강대로 / 봉래동2가"
-                        android:textColor="@color/sub"
-                        android:textSize="12sp" />
-                </LinearLayout>
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/bg_btn"
-                    android:paddingStart="8dp"
-                    android:paddingEnd="8dp"
-                    android:text="00/00"
-                    android:textColor="@color/sub"
-                    android:textSize="11sp" />
-            </LinearLayout>
+                    android:orientation="vertical" />
+            </ScrollView>
         </LinearLayout>
 
+        <!-- 오른쪽: 아날로그 시계 + 디지털 시간 -->
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="match_parent"
@@ -199,47 +162,20 @@
                 android:id="@+id/clock"
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
-                android:layout_marginTop="8dp"
+                android:layout_marginTop="12dp"
                 android:layout_weight="1" />
 
-            <TextView
+            <TextClock
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                android:layout_marginTop="4dp"
+                android:format12Hour="HH:mm"
+                android:format24Hour="HH:mm"
                 android:gravity="center"
-                android:text="날씨 정보가 수신되지 않았습니다."
-                android:textColor="#B8C4CC"
-                android:textSize="13sp" />
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="8dp"
-                android:gravity="center"
-                android:text="TPEG 또는 Tlink를 이용하시면 날씨 정보가 제공됩니다."
-                android:textColor="#8F9DA8"
-                android:textSize="10sp" />
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="64dp"
-                android:background="@drawable/bg_weather_bottom"
-                android:orientation="horizontal">
-
-                <LinearLayout android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:orientation="vertical">
-                    <ImageView android:layout_width="26dp" android:layout_height="26dp" android:src="@drawable/ic_home" />
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="집" android:textColor="@color/text" android:textSize="11sp" />
-                </LinearLayout>
-
-                <LinearLayout android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:orientation="vertical">
-                    <ImageView android:layout_width="26dp" android:layout_height="26dp" android:src="@drawable/ic_star" />
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="자주가는곳" android:textColor="@color/text" android:textSize="11sp" />
-                </LinearLayout>
-
-                <LinearLayout android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:orientation="vertical">
-                    <ImageView android:layout_width="26dp" android:layout_height="26dp" android:src="@drawable/ic_place" />
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="등록지점" android:textColor="@color/text" android:textSize="11sp" />
-                </LinearLayout>
-            </LinearLayout>
+                android:textColor="@color/text"
+                android:textSize="44sp"
+                android:textStyle="bold" />
         </LinearLayout>
     </LinearLayout>
 </LinearLayout>

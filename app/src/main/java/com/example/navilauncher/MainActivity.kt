@@ -4,17 +4,27 @@ import android.app.Activity
 import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
+import android.view.KeyEvent
 import android.view.View
+import android.view.inputmethod.EditorInfo
+import android.view.inputmethod.InputMethodManager
+import android.widget.EditText
 import android.widget.GridView
 import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 
 class MainActivity : Activity() {
 
     private val prefs by lazy { getSharedPreferences("slots", Context.MODE_PRIVATE) }
+    private val recentPrefs by lazy { getSharedPreferences("recent", Context.MODE_PRIVATE) }
     private val slotIds = intArrayOf(R.id.slot0, R.id.slot1, R.id.slot2)
+
+    private lateinit var searchInput: EditText
+    private lateinit var recentList: LinearLayout
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -32,17 +42,104 @@ class MainActivity : Activity() {
             startActivity(Intent(this, AllAppsActivity::class.java))
         }
 
-        findViewById<View>(R.id.searchBox).setOnClickListener { toast("통합검색은 준비 중이에요") }
-        findViewById<View>(R.id.btnEdit).setOnClickListener { toast("왼쪽 위 3개 버튼을 꾹 눌러 앱을 지정하세요") }
+        // 구글 검색
+        searchInput = findViewById(R.id.searchInput)
+        recentList = findViewById(R.id.recentList)
+        searchInput.setOnEditorActionListener { _, actionId, event ->
+            val enter = event?.keyCode == KeyEvent.KEYCODE_ENTER && event.action == KeyEvent.ACTION_DOWN
+            if (actionId == EditorInfo.IME_ACTION_SEARCH || enter) {
+                doSearch(searchInput.text.toString()); true
+            } else false
+        }
+        findViewById<View>(R.id.searchIcon).setOnClickListener { doSearch(searchInput.text.toString()) }
+
+        // 휴지통 버튼: 최근 검색 전체 삭제
+        findViewById<View>(R.id.btnClear).setOnClickListener {
+            if (loadRecent().isEmpty()) return@setOnClickListener
+            AlertDialog.Builder(this)
+                .setMessage("최근 검색을 모두 지울까요?")
+                .setPositiveButton("지우기") { _, _ -> saveRecent(emptyList()); renderRecent() }
+                .setNegativeButton("취소", null)
+                .show()
+        }
 
         refreshSlots()
+        renderRecent()
     }
 
     override fun onResume() {
         super.onResume()
         refreshSlots()
+        renderRecent()
     }
 
+    // ---------- 최근 검색 ----------
+    private fun loadRecent(): MutableList<String> =
+        (recentPrefs.getString("list", "") ?: "").split("\n").filter { it.isNotBlank() }.toMutableList()
+
+    private fun saveRecent(list: List<String>) {
+        recentPrefs.edit().putString("list", list.joinToString("\n")).apply()
+    }
+
+    private fun doSearch(raw: String) {
+        val query = raw.trim()
+        if (query.isEmpty()) return
+        val list = loadRecent()
+        list.remove(query)
+        list.add(0, query)
+        saveRecent(list.take(8))
+
+        searchInput.setText("")
+        searchInput.clearFocus()
+        (getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager)
+            .hideSoftInputFromWindow(searchInput.windowToken, 0)
+        renderRecent()
+        openGoogle(query)
+    }
+
+    private fun openGoogle(query: String) {
+        val uri = Uri.parse("https://www.google.com/search?q=" + Uri.encode(query))
+        try {
+            startActivity(Intent(Intent.ACTION_VIEW, uri))
+        } catch (e: Exception) {
+            toast("검색을 열 수 없어요")
+        }
+    }
+
+    private fun renderRecent() {
+        recentList.removeAllViews()
+        val list = loadRecent()
+        if (list.isEmpty()) {
+            recentList.addView(row("최근 검색 기록이 없어요", dim = true))
+            return
+        }
+        list.forEach { q ->
+            val tv = row(q, dim = false)
+            tv.setOnClickListener { openGoogle(q); bump(q) }
+            tv.setOnLongClickListener {
+                val l = loadRecent(); l.remove(q); saveRecent(l); renderRecent(); true
+            }
+            recentList.addView(tv)
+        }
+    }
+
+    /** 다시 눌러 검색한 항목을 맨 위로 */
+    private fun bump(q: String) {
+        val l = loadRecent(); l.remove(q); l.add(0, q); saveRecent(l); renderRecent()
+    }
+
+    private fun row(text: String, dim: Boolean): TextView = TextView(this).apply {
+        this.text = text
+        textSize = 15f
+        setTextColor(getColor(if (dim) R.color.sub else R.color.text))
+        maxLines = 1
+        ellipsize = android.text.TextUtils.TruncateAt.END
+        setPadding(dp(14), dp(11), dp(14), dp(11))
+    }
+
+    private fun dp(n: Int) = (n * resources.displayMetrics.density).toInt()
+
+    // ---------- 바로가기 슬롯 ----------
     private fun onSlotClick(index: Int) {
         val pkg = prefs.getString("slot$index", null)
         if (pkg == null) {

@@ -6,31 +6,55 @@ import android.util.AttributeSet
 import android.view.View
 import java.util.Calendar
 
-/** 원본 화면의 아날로그 시계 (청록 링 + 흰색 둥근 시침/분침) */
+/** 아날로그 시계: 청록 링 + 흰색 시침/분침 + 청록 초침 (1초마다 갱신) */
 class ClockView @JvmOverloads constructor(ctx: Context, attrs: AttributeSet? = null) : View(ctx, attrs) {
 
     private val ring = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE }
     private val hand = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         color = Color.WHITE; strokeCap = Paint.Cap.ROUND
     }
+    private val secHand = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = Color.parseColor("#35C6C0"); strokeCap = Paint.Cap.ROUND
+    }
     private val dot = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         style = Paint.Style.STROKE; color = Color.parseColor("#35C6C0")
     }
-    private val txt = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.parseColor("#6FB7C4"); textAlign = Paint.Align.LEFT
+
+    private var running = false
+
+    private val ticker = object : Runnable {
+        override fun run() {
+            if (!running) return
+            invalidate()
+            // 다음 '정각 초'에 맞춰 갱신
+            postDelayed(this, 1000 - (System.currentTimeMillis() % 1000))
+        }
     }
 
-    private val tick = object : Runnable {
-        override fun run() { invalidate(); postDelayed(this, 1000) }
+    private fun start() {
+        if (running) return
+        running = true
+        removeCallbacks(ticker)
+        post(ticker)
     }
 
-    override fun onAttachedToWindow() { super.onAttachedToWindow(); post(tick) }
-    override fun onDetachedFromWindow() { removeCallbacks(tick); super.onDetachedFromWindow() }
+    private fun stop() {
+        running = false
+        removeCallbacks(ticker)
+    }
+
+    override fun onAttachedToWindow() { super.onAttachedToWindow(); start() }
+    override fun onDetachedFromWindow() { stop(); super.onDetachedFromWindow() }
+    override fun onWindowVisibilityChanged(visibility: Int) {
+        super.onWindowVisibilityChanged(visibility)
+        if (visibility == VISIBLE) start() else stop()
+    }
 
     override fun onDraw(c: Canvas) {
         val w = width.toFloat(); val h = height.toFloat()
         val cx = w / 2; val cy = h / 2
         val r = minOf(w, h) / 2 - 6f
+        if (r <= 0f) return
         val sw = r * 0.09f
 
         ring.strokeWidth = sw
@@ -39,24 +63,24 @@ class ClockView @JvmOverloads constructor(ctx: Context, attrs: AttributeSet? = n
         c.drawCircle(cx, cy, r - sw / 2, ring)
 
         val cal = Calendar.getInstance()
-        val m = cal.get(Calendar.MINUTE) + cal.get(Calendar.SECOND) / 60f
-        val hr = (cal.get(Calendar.HOUR) % 12) + m / 60f
+        val sec = cal.get(Calendar.SECOND)
+        val min = cal.get(Calendar.MINUTE) + sec / 60f
+        val hr = (cal.get(Calendar.HOUR) % 12) + min / 60f
 
         hand.strokeWidth = r * 0.075f
-        drawHand(c, cx, cy, hr * 30f, r * 0.30f, r * 0.62f)
+        drawHand(c, cx, cy, hr * 30f, r * 0.30f, r * 0.62f, hand)
         hand.strokeWidth = r * 0.055f
-        drawHand(c, cx, cy, m * 6f, 0f, r * 0.80f)
+        drawHand(c, cx, cy, min * 6f, 0f, r * 0.80f, hand)
+        secHand.strokeWidth = r * 0.025f
+        drawHand(c, cx, cy, sec * 6f, -r * 0.15f, r * 0.82f, secHand)
 
         dot.strokeWidth = r * 0.03f
         c.drawCircle(cx, cy, r * 0.055f, dot)
-        txt.textSize = r * 0.13f
-        val ampm = if (cal.get(Calendar.AM_PM) == Calendar.AM) "AM" else "PM"
-        c.drawText("%02d %s".format(cal.get(Calendar.MINUTE), ampm), cx + r * 0.12f, cy + r * 0.05f, txt)
     }
 
-    private fun drawHand(c: Canvas, cx: Float, cy: Float, deg: Float, from: Float, to: Float) {
+    private fun drawHand(c: Canvas, cx: Float, cy: Float, deg: Float, from: Float, to: Float, p: Paint) {
         val a = Math.toRadians((deg - 90).toDouble())
         val dx = Math.cos(a).toFloat(); val dy = Math.sin(a).toFloat()
-        c.drawLine(cx + dx * from, cy + dy * from, cx + dx * to, cy + dy * to, hand)
+        c.drawLine(cx + dx * from, cy + dy * from, cx + dx * to, cy + dy * to, p)
     }
 }
