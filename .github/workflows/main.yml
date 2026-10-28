@@ -15,10 +15,15 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Grant execute permission and Build
+      - name: Find gradlew and Build
         run: |
-          # NaviLauncher 폴더 안으로 들어가서 빌드 실행
-          cd NaviLauncher
+          GRADLEW_PATH=$(find . -name gradlew -type f | head -n 1)
+          if [ -z "$GRADLEW_PATH" ]; then
+            echo "Error: gradlew not found."
+            exit 1
+          fi
+          PROJECT_DIR=$(dirname "$GRADLEW_PATH")
+          cd "$PROJECT_DIR"
           chmod +x gradlew
           ./gradlew assembleDebug
 
