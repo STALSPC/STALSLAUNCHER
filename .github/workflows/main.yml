@@ -15,13 +15,12 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Grant execute permission for gradlew
+      - name: Grant execute permission and Build
         run: |
-          find . -name "gradlew" -exec chmod +x {} +
-
-      - name: Build with Gradle
-        run: |
-          find . -name "gradlew" -execdir ./gradlew assembleDebug \;
+          # NaviLauncher 폴더 안으로 들어가서 빌드 실행
+          cd NaviLauncher
+          chmod +x gradlew
+          ./gradlew assembleDebug
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
