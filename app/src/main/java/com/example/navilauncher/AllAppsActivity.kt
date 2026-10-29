@@ -9,12 +9,13 @@ class AllAppsActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_all_apps)
-        findViewById<View>(R.id.btnBack).setOnClickListener { finish() }
+        findViewById<View>(R.id.btnBack).setOnClickListener { Sounds.click(this); finish() }
 
         val apps = Apps.load(this)
         findViewById<GridView>(R.id.grid).apply {
             adapter = AppAdapter(apps)
             setOnItemClickListener { _, _, pos, _ ->
+                Sounds.click(this@AllAppsActivity)
                 Apps.launch(this@AllAppsActivity, apps[pos].pkg)
             }
         }

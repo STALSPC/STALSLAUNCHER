@@ -5,31 +5,14 @@
     android:background="@color/bg"
     android:orientation="vertical">
 
-    <!-- 상단: 시간만 표시 -->
-    <RelativeLayout
-        android:layout_width="match_parent"
-        android:layout_height="44dp"
-        android:paddingStart="12dp"
-        android:paddingEnd="16dp">
-
-        <TextClock
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentEnd="true"
-            android:layout_centerVertical="true"
-            android:format12Hour="a h:mm"
-            android:format24Hour="a h:mm"
-            android:textColor="@color/text"
-            android:textSize="22sp" />
-    </RelativeLayout>
-
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="horizontal"
         android:paddingStart="4dp"
         android:paddingEnd="8dp"
-        android:paddingBottom="8dp">
+        android:paddingBottom="8dp"
+        android:paddingTop="0dp">
 
         <!-- 왼쪽 4개 버튼 -->
         <LinearLayout
@@ -165,13 +148,12 @@
                 android:layout_marginTop="12dp"
                 android:layout_weight="1" />
 
-            <TextClock
+            <TextView
+                android:id="@+id/digitalTime"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="16dp"
                 android:layout_marginTop="4dp"
-                android:format12Hour="HH:mm"
-                android:format24Hour="HH:mm"
                 android:gravity="center"
                 android:textColor="@color/text"
                 android:textSize="44sp"

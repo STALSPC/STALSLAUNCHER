@@ -6,6 +6,11 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import android.text.Spannable
+import android.text.SpannableString
+import android.text.style.RelativeSizeSpan
 import android.view.KeyEvent
 import android.view.View
 import android.view.inputmethod.EditorInfo
@@ -16,6 +21,9 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 class MainActivity : Activity() {
 
@@ -25,10 +33,23 @@ class MainActivity : Activity() {
 
     private lateinit var searchInput: EditText
     private lateinit var recentList: LinearLayout
+    private lateinit var digitalTime: TextView
+
+    private val handler = Handler(Looper.getMainLooper())
+    private val timeFmt = SimpleDateFormat("hh:mm a", Locale.US) // 12시간제, AM/PM
+    private val timeTick = object : Runnable {
+        override fun run() {
+            updateDigitalTime()
+            handler.postDelayed(this, 1000 - (System.currentTimeMillis() % 1000))
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        Sounds.init(this)
+        Sounds.start(this) // 런처가 켜질 때
+        digitalTime = findViewById(R.id.digitalTime)
 
         // 위 3개 버튼: 짧게 = 실행, 꾹 = 앱 지정
         slotIds.forEachIndexed { index, id ->
@@ -39,6 +60,7 @@ class MainActivity : Activity() {
 
         // 맨 아래 버튼: 전체 앱
         findViewById<View>(R.id.btnAllApps).setOnClickListener {
+            Sounds.click(this)
             startActivity(Intent(this, AllAppsActivity::class.java))
         }
 
@@ -51,10 +73,13 @@ class MainActivity : Activity() {
                 doSearch(searchInput.text.toString()); true
             } else false
         }
-        findViewById<View>(R.id.searchIcon).setOnClickListener { doSearch(searchInput.text.toString()) }
+        findViewById<View>(R.id.searchIcon).setOnClickListener {
+            Sounds.click(this); doSearch(searchInput.text.toString())
+        }
 
         // 휴지통 버튼: 최근 검색 전체 삭제
         findViewById<View>(R.id.btnClear).setOnClickListener {
+            Sounds.click(this)
             if (loadRecent().isEmpty()) return@setOnClickListener
             AlertDialog.Builder(this)
                 .setMessage("최근 검색을 모두 지울까요?")
@@ -71,6 +96,29 @@ class MainActivity : Activity() {
         super.onResume()
         refreshSlots()
         renderRecent()
+        handler.removeCallbacks(timeTick)
+        handler.post(timeTick)
+    }
+
+    override fun onPause() {
+        handler.removeCallbacks(timeTick)
+        super.onPause()
+    }
+
+    /** 이미 켜져 있는 상태에서 홈 버튼으로 런처가 다시 올라올 때 */
+    override fun onNewIntent(intent: Intent?) {
+        super.onNewIntent(intent)
+        if (intent != null && intent.action == Intent.ACTION_MAIN && intent.hasCategory(Intent.CATEGORY_HOME)) {
+            Sounds.start(this)
+        }
+    }
+
+    private fun updateDigitalTime() {
+        val text = timeFmt.format(Date())          // 예: "11:24 PM"
+        val sp = SpannableString(text)
+        val ampm = text.indexOf(' ') + 1           // AM/PM 부분은 작게
+        sp.setSpan(RelativeSizeSpan(0.5f), ampm, text.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+        digitalTime.text = sp
     }
 
     // ---------- 최근 검색 ----------
@@ -115,7 +163,7 @@ class MainActivity : Activity() {
         }
         list.forEach { q ->
             val tv = row(q, dim = false)
-            tv.setOnClickListener { openGoogle(q); bump(q) }
+            tv.setOnClickListener { Sounds.click(this); openGoogle(q); bump(q) }
             tv.setOnLongClickListener {
                 val l = loadRecent(); l.remove(q); saveRecent(l); renderRecent(); true
             }
@@ -141,6 +189,7 @@ class MainActivity : Activity() {
 
     // ---------- 바로가기 슬롯 ----------
     private fun onSlotClick(index: Int) {
+        Sounds.click(this)
         val pkg = prefs.getString("slot$index", null)
         if (pkg == null) {
             toast("버튼을 꾹 눌러 앱을 지정하세요")
@@ -166,6 +215,7 @@ class MainActivity : Activity() {
             }
             .create()
         grid.setOnItemClickListener { _, _, pos, _ ->
+            Sounds.click(this)
             prefs.edit().putString("slot$index", apps[pos].pkg).apply()
             refreshSlots()
             dialog.dismiss()
